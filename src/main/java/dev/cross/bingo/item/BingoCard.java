@@ -14,12 +14,14 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,7 +33,11 @@ public class BingoCard extends AbstractBlissfulItem {
         cardStack = new ItemStack(Material.PAPER);
         ItemMeta meta = Objects.requireNonNull(cardStack.getItemMeta());
         meta.setDisplayName(BukkitComponentSerializer.legacy().serialize(Component.text("Bingo Card").color(BColors.YELLOW).decoration(TextDecoration.ITALIC, false)));
-        meta.setLore(Stream.of(Component.text(" "),  Component.text("Holy shit").decoration(TextDecoration.ITALIC, false).color(BColors.LIGHT_PURPLE)).map(it -> BukkitComponentSerializer.legacy().serialize(it)).collect(Collectors.toList()));
+        meta.setLore(Stream.of(Component.text(" "),
+                Component.text("   ⏺ \"An elegant item, for a more civilized age.\"").decoration(TextDecoration.ITALIC, false).color(BColors.LIGHT_PURPLE),
+                Component.text("       - ").decoration(TextDecoration.ITALIC, false).color(BColors.LIGHT_PURPLE).append(Component.text("BingoDabQueen").color(BColors.YELLOW)),
+                Component.text("  ")
+        ).map(it -> BukkitComponentSerializer.legacy().serialize(it)).collect(Collectors.toList()));
         cardStack.setItemMeta(meta);
     }
 
@@ -39,13 +45,18 @@ public class BingoCard extends AbstractBlissfulItem {
         super("bingo-card", cardStack);
     }
 
-    public static final int AMOUNT = 25;
+    public static final int AMOUNT = 24;
 
     public List<BingoDigit> generateDigits() {
         Random random = new Random();
         List<Integer> digits = new ArrayList<>();
 
-        for (int i = 0; i < AMOUNT; i++) {
+        for (int i = 0; i < AMOUNT + 1; i++) {
+            if (i == Math.floor((double) (AMOUNT + 1) / 2.0)) {
+                // Adds the middle number, aka, 101, if it's in the middle of the amount.
+                digits.add((int) BingoDigit.middleIndicator);
+                continue;
+            }
             int digit = random.nextInt(1, 65);
 
             while (digits.contains(digit)) {

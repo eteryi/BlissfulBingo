@@ -1,8 +1,20 @@
 package dev.cross.bingo;
 
+import dev.cross.blissfulcore.Pair;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+
+import java.util.Optional;
+
 public class BingoDigit {
     private final byte bingoDigit;
     private boolean isSelected;
+    public static final byte middleIndicator = 101;
+    public static final NamespacedKey NUMBER_KEY = NamespacedKey.fromString("bingo_number", Bingo.getPlugin());
 
     public BingoDigit(int digit) {
         this(digit, false);
@@ -34,5 +46,32 @@ public class BingoDigit {
 
     public int getBingoDigit() {
         return bingoDigit;
+    }
+
+    public boolean isMiddle() {
+        return this.getBingoDigit() == middleIndicator;
+    }
+    public ItemStack createItem() {
+        Pair<Material, Integer> itemData = this.isSelected() ? BingoElements.SELECTED_BINGO : BingoElements.UNSELECTED_BINGO;
+
+        ItemStack stack = new ItemStack(itemData.first());
+        ItemMeta meta = stack.getItemMeta();
+        assert meta != null;
+
+        meta.setCustomModelData(itemData.second());
+        meta.setDisplayName(ChatColor.RESET + " - " + this.bingoDigit);
+        if (this.isMiddle()) {
+            meta.setDisplayName(ChatColor.RESET + " - FREE SPACE");
+        }
+        meta.getPersistentDataContainer().set(NUMBER_KEY, PersistentDataType.INTEGER, this.getBingoDigit());
+        stack.setItemMeta(meta);
+        stack.setAmount(this.isMiddle() ? 1 : this.getBingoDigit());
+        return stack;
+    }
+
+    public static Optional<Integer> from(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return Optional.empty();
+        return Optional.ofNullable(meta.getPersistentDataContainer().get(NUMBER_KEY, PersistentDataType.INTEGER));
     }
 }
