@@ -4,3 +4,6 @@ main: dev.cross.bingo.Bingo
 api-version: '1.20'
 depend:
   - BlissfulAPI
+commands:
+  red-button:
+    usage: /red-button

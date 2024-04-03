@@ -1,5 +1,6 @@
 package dev.cross.bingo.ui;
 
+import dev.cross.bingo.BingoBoard;
 import dev.cross.bingo.BingoDigit;
 import dev.cross.bingo.item.BingoCard;
 import dev.cross.blissfulcore.ui.inventory.GUIInventory;
@@ -19,20 +20,22 @@ import java.util.Optional;
 
 public class BingoInventory extends GUIInventory {
     public static final Component BINGO_SCREEN = Component.text("\uE201\uE206").color(NamedTextColor.WHITE);
-    private final List<BingoDigit> bingoNumbers;
+    private final BingoBoard board;
     private final ItemStack bingoCard;
 
     public BingoInventory(Player player, ItemStack bingoCard, List<BingoDigit> digits) {
         super(player, false);
-        this.bingoNumbers = digits;
         this.bingoCard = bingoCard;
+        this.board = new BingoBoard(digits);
+        addButton(new BingoButton(board), 54 - 6);
     }
 
     @Override
     protected Inventory inventorySupplier() {
         Inventory inventory = Bukkit.createInventory(this.getPlayer(), 54, BukkitComponentSerializer.legacy().serialize(BINGO_SCREEN));
-        for (int i = 0; i < bingoNumbers.size(); i++) {
-            BingoDigit digit = bingoNumbers.get(i);
+        List<BingoDigit> digits = board.getDigits();
+        for (int i = 0; i < digits.size(); i++) {
+            BingoDigit digit = digits.get(i);
             ItemStack digitStack = digit.createItem();
             int x = i / 5;
             int y = 9 * x;
@@ -47,8 +50,9 @@ public class BingoInventory extends GUIInventory {
         if (getClicked == null) return;
         Optional<Integer> bingoDigit = BingoDigit.from(getClicked);
         if (bingoDigit.isEmpty()) return;
+        List<BingoDigit> digits = board.getDigits();
 
-        bingoNumbers.stream().filter(it -> it.getBingoDigit() == bingoDigit.get()).findAny().ifPresent(it -> {
+        digits.stream().filter(it -> it.getBingoDigit() == bingoDigit.get()).findAny().ifPresent(it -> {
             it.setSelected(!it.isSelected());
 
             event.getClickedInventory().setItem(event.getSlot(), it.createItem());
@@ -57,6 +61,6 @@ public class BingoInventory extends GUIInventory {
 
     @Override
     protected void onClose(InventoryCloseEvent inventoryCloseEvent) {
-        BingoCard.write(bingoNumbers, bingoCard);
+        BingoCard.write(board.getDigits(), bingoCard);
     }
 }
