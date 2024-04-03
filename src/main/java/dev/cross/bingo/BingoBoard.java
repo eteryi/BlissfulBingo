@@ -11,13 +11,6 @@ public class BingoBoard {
         for (int i = 0; i < digits.size(); i++) {
             matrix[i % 5][i / 5] = digits.get(i);
         }
-
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                System.out.printf(matrix[i][j].getBingoDigit() + " ");
-            }
-            System.out.println("\n");
-        }
     }
 
     private enum Direction {
