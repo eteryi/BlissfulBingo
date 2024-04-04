@@ -15,7 +15,7 @@ public class RedButton extends InteractWindowDisplay {
     public RedButton() {
         super(12);
         this.active = false;
-        this.setInteractionOffset(new Vector(0.0, -0.3, 0.0));
+        this.setInteractionOffset(new Vector(0.0, -0.5, 0.0));
     }
 
     private static ItemStack getItemWithModel(int customModelData) {

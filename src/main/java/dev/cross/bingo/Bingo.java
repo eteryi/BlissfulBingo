@@ -2,7 +2,11 @@ package dev.cross.bingo;
 
 import dev.cross.bingo.command.RedButtonCommand;
 import dev.cross.bingo.item.BingoCard;
+import dev.cross.bingo.ui.StringFormatter;
 import dev.cross.blissfulcore.BlissfulCore;
+import dev.cross.blissfulcore.api.BlissfulAPI;
+import dev.cross.blissfulcore.ui.BColors;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,11 +17,26 @@ import java.util.Objects;
 import java.util.Random;
 
 public final class Bingo extends JavaPlugin {
+
+    private static String getOrdinal(int i) {
+        String[] ordinals = {"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th", "th"};
+        int j = i % 100;
+        return switch (j) {
+            case 11 -> "11th";
+            case 12 -> "12th";
+            case 13 -> "13th";
+            default -> i + ordinals[i % 10];
+        };
+    }
+
     public static class State {
-        HashSet<Integer> validDigits;
+        private HashSet<Integer> validDigits;
+        private static final int baseTokensPerWin = 2000;
+        private final HashSet<Player> winners;
 
         private State() {
             this.validDigits = new HashSet<>();
+            this.winners = new HashSet<>();
         }
 
         public boolean isValid(int i) {
@@ -37,22 +56,35 @@ public final class Bingo extends JavaPlugin {
             validDigits.add(rand);
 
             for (Player p : Bukkit.getOnlinePlayers()) {
-                p.sendTitle("The number is...", "", 10, 20, 0);
+                p.sendTitle(ChatColor.of(BColors.LIGHT_PURPLE.asHexString()) + "The number is...", "", 10, 20, 10);
             }
             int finalRand = rand;
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.sendTitle(finalRand + "", "", 0, 100, 20);
+                        p.sendTitle(StringFormatter.getBackgroundString(finalRand + ""), "", 10, 80, 20);
                     }
                 }
             }.runTaskLater(Bingo.getPlugin(), 20L);
         }
 
+        public boolean hasWon(Player player) {
+            return this.winners.contains(player);
+        }
+
         public void declareWinner(Player player) {
-            player.sendMessage("You have just won at Bingo! Congratz!");
-            this.reset();
+            winners.add(player);
+
+            ChatColor purple = ChatColor.of(BColors.LIGHT_PURPLE.asHexString());
+            ChatColor red = ChatColor.of(BColors.RED.asHexString());
+            ChatColor yellow = ChatColor.of(BColors.YELLOW.asHexString());
+
+            String finish = yellow + "(" + getOrdinal(this.winners.size()) + ")";
+            String message = yellow + " ⏺ " + red + player.getName() + purple + " has finished the Bingo Card  " + finish;
+
+            Bukkit.getOnlinePlayers().forEach(it -> it.sendMessage(message));
+            BlissfulAPI.getImpl().setTokensFor(player, BlissfulAPI.getImpl().getTokens(player) + (baseTokensPerWin * (1 / winners.size())));
         }
     }
 

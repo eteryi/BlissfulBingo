@@ -9,6 +9,7 @@ public class BingoElements {
 
     public static final Pair<Material, Integer> BINGO_BUTTON = Pair.of(Material.GOLD_NUGGET, 7);
     public static final Pair<Material, Integer> SELECTED_BINGO_BUTTON = Pair.of(Material.GOLD_NUGGET, 8);
+    public static final Pair<Material, Integer> BINGO_CARD = Pair.of(Material.PAPER, 14);
 
 
 }

@@ -2,13 +2,13 @@ package dev.cross.bingo.item;
 
 import dev.cross.bingo.Bingo;
 import dev.cross.bingo.BingoDigit;
+import dev.cross.bingo.BingoElements;
 import dev.cross.bingo.ui.BingoInventory;
 import dev.cross.blissfulcore.item.AbstractBlissfulItem;
 import dev.cross.blissfulcore.ui.BColors;
 import net.kyori.adventure.platform.bukkit.BukkitComponentSerializer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -30,8 +30,9 @@ public class BingoCard extends AbstractBlissfulItem {
     private static final @NotNull NamespacedKey BINGO_KEY = Objects.requireNonNull(NamespacedKey.fromString("bingo_card", Bingo.getPlugin()));
 
     static {
-        cardStack = new ItemStack(Material.PAPER);
+        cardStack = new ItemStack(BingoElements.BINGO_CARD.first());
         ItemMeta meta = Objects.requireNonNull(cardStack.getItemMeta());
+        meta.setCustomModelData(BingoElements.BINGO_CARD.second());
         meta.setDisplayName(BukkitComponentSerializer.legacy().serialize(Component.text("Bingo Card").color(BColors.YELLOW).decoration(TextDecoration.ITALIC, false)));
         meta.setLore(Stream.of(Component.text(" "),
                 Component.text("   ⏺ \"An elegant item, for a more civilized age.\"").decoration(TextDecoration.ITALIC, false).color(BColors.LIGHT_PURPLE),

@@ -7,6 +7,7 @@ import dev.cross.blissfulcore.ui.BColors;
 import dev.cross.blissfulcore.ui.inventory.button.AbstractClickableButton;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -56,18 +57,22 @@ public class BingoButton extends AbstractClickableButton {
         /*
         Logic
          */
+        Player p = (Player) event.getWhoClicked();
+        if (Bingo.STATE.hasWon(p)) {
+            p.sendMessage(ChatColor.of(BColors.RED.asHexString()) + " ⏺ You have already finished this round!");
+            return;
+        }
 
         if (!valid) {
-            event.getWhoClicked().sendMessage("You have selected unrolled numbers in your bingo card!");
+            p.sendMessage(ChatColor.of(BColors.RED.asHexString()) + " ⏺ You have selected unrolled numbers in your Bingo card!");
             return;
         }
 
         if (!bingo) {
-            event.getWhoClicked().sendMessage("You don't have a bingo in your current bingo card!");
+            p.sendMessage(ChatColor.of(BColors.RED.asHexString()) + " ⏺ You don't have a valid bingo in your Bingo card!");
             return;
         }
 
-        Player p = (Player) event.getWhoClicked();
         Bingo.STATE.declareWinner(p);
     }
 }
