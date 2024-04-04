@@ -7,3 +7,5 @@ depend:
 commands:
   red-button:
     usage: /red-button
+  bingo:
+    usage: /bingo

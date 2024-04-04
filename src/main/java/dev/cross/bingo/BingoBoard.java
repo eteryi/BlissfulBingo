@@ -2,6 +2,7 @@ package dev.cross.bingo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class BingoBoard {
 
@@ -36,12 +37,14 @@ public class BingoBoard {
     }
 
     public boolean isValid() {
-        Bingo.State state = Bingo.STATE;
+        Optional<Bingo.State> state = Bingo.getState();
+
+        if (state.isEmpty()) return false;
 
         List<BingoDigit> digits = getDigits();
         for (BingoDigit digit : digits) {
             if (digit.isSelected() && !digit.isMiddle()) {
-                boolean b = state.isValid(digit.getBingoDigit());
+                boolean b = state.get().isValid(digit.getBingoDigit());
                 if (!b) {
                     return false;
                 }

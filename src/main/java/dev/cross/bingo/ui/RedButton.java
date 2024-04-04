@@ -1,6 +1,7 @@
 package dev.cross.bingo.ui;
 
 import dev.cross.bingo.Bingo;
+import dev.cross.blissfulcore.ui.BSounds;
 import dev.cross.blissfulcore.ui.display.InteractWindowDisplay;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -31,7 +32,8 @@ public class RedButton extends InteractWindowDisplay {
         if (!player.isOp()) return;
         if (this.active) return;
 
-        Bingo.STATE.roll();
+        player.playSound(player, BSounds.BUTTON_CLICK, 1.5f, 0.9f);
+        if (Bingo.getState().isPresent()) Bingo.getState().get().roll();
 
         this.getDisplayEntity().setItemStack(getItemWithModel(13));
         active = true;

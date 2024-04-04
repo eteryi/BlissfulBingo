@@ -1,50 +1,85 @@
 package dev.cross.bingo;
 
+import dev.cross.bingo.command.BingoStateCommand;
 import dev.cross.bingo.command.RedButtonCommand;
 import dev.cross.bingo.item.BingoCard;
-import dev.cross.bingo.ui.StringFormatter;
+import dev.cross.bingo.ui.BingoHUD;
+import dev.cross.bingo.ui.BingoTextUtils;
 import dev.cross.blissfulcore.BlissfulCore;
 import dev.cross.blissfulcore.api.BlissfulAPI;
+import dev.cross.blissfulcore.api.BlissfulTeams;
+import dev.cross.blissfulcore.item.BlissfulItem;
 import dev.cross.blissfulcore.ui.BColors;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 public final class Bingo extends JavaPlugin {
 
-    private static String getOrdinal(int i) {
-        String[] ordinals = {"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th", "th"};
-        int j = i % 100;
-        return switch (j) {
-            case 11 -> "11th";
-            case 12 -> "12th";
-            case 13 -> "13th";
-            default -> i + ordinals[i % 10];
-        };
-    }
-
     public static class State {
-        private HashSet<Integer> validDigits;
-        private static final int baseTokensPerWin = 2000;
-        private final HashSet<Player> winners;
+        public static final int MAX_SCORE = 3;
 
-        private State() {
+        private HashSet<Integer> validDigits;
+
+        private final BlissfulTeams teamOne;
+        private final BlissfulTeams teamTwo;
+
+        private final HashMap<BlissfulTeams, Integer> score;
+        private int roundCount;
+
+        private final BukkitTask hudTask;
+
+        private State(BlissfulTeams teamOne, BlissfulTeams teamTwo) {
             this.validDigits = new HashSet<>();
-            this.winners = new HashSet<>();
+
+            this.teamOne = teamOne;
+            this.teamTwo = teamTwo;
+
+            this.score = new HashMap<>();
+
+            this.hudTask = Bukkit.getScheduler().runTaskTimer(Bingo.getPlugin(), new BingoHUD(this), 0L, 20L);
+            this.startRound();
+        }
+
+        public BlissfulTeams[] getTeams() {
+            return new BlissfulTeams[]{teamOne, teamTwo};
+        }
+
+        public int getScore(BlissfulTeams team) {
+            return score.getOrDefault(team, 0);
         }
 
         public boolean isValid(int i) {
             return this.validDigits.contains(i);
         }
 
-        private void reset() {
+        private void startRound() {
+            roundCount++;
             this.validDigits = new HashSet<>();
+
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.getInventory().forEach(it -> {
+                    if (BlissfulItem.isCustom(it)) {
+                        if (BlissfulItem.getID(it).orElse("").equals(BingoCard.BINGO_CARD_ID)) {
+                            it.setType(Material.AIR);
+                        }
+                    }
+                });
+                p.sendMessage("New round!");
+            }
+            for (Player p : teamOne.getPlayers()) {
+                p.getInventory().addItem(BINGO_CARD.createItem());
+            }
+
+            for (Player p : teamTwo.getPlayers()) {
+                p.getInventory().addItem(BINGO_CARD.createItem());
+            }
         }
 
         public void roll() {
@@ -63,33 +98,56 @@ public final class Bingo extends JavaPlugin {
                 @Override
                 public void run() {
                     for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.sendTitle(StringFormatter.getBackgroundString(finalRand + ""), "", 10, 80, 20);
+                        p.sendTitle(BingoTextUtils.getGoldenString(finalRand + ""), "", 0, 80, 0);
                     }
                 }
             }.runTaskLater(Bingo.getPlugin(), 20L);
         }
 
-        public boolean hasWon(Player player) {
-            return this.winners.contains(player);
-        }
 
         public void declareWinner(Player player) {
-            winners.add(player);
+            Optional<BlissfulTeams> winnerTeam = BlissfulAPI.getImpl().getTeamFrom(player);
+            if (winnerTeam.isEmpty()) return;
+            if (Arrays.stream(getTeams()).noneMatch(it -> it == winnerTeam.get())) return;
 
-            ChatColor purple = ChatColor.of(BColors.LIGHT_PURPLE.asHexString());
-            ChatColor red = ChatColor.of(BColors.RED.asHexString());
-            ChatColor yellow = ChatColor.of(BColors.YELLOW.asHexString());
+            score.put(winnerTeam.get(), getScore(winnerTeam.get()) + 1);
 
-            String finish = yellow + "(" + getOrdinal(this.winners.size()) + ")";
-            String message = yellow + " ⏺ " + red + player.getName() + purple + " has finished the Bingo Card  " + finish;
+            String yellow = ChatColor.of(BColors.YELLOW.asHexString()).toString();
+            String teamName = winnerTeam.get().getDisplayName();
+            Bukkit.getOnlinePlayers().forEach(it -> it.sendTitle(teamName, yellow + "has won this round!", 0, 100, 0));
 
-            Bukkit.getOnlinePlayers().forEach(it -> it.sendMessage(message));
-            BlissfulAPI.getImpl().setTokensFor(player, BlissfulAPI.getImpl().getTokens(player) + (baseTokensPerWin * (1 / winners.size())));
+            if (getScore(winnerTeam.get()) >= MAX_SCORE) {
+                Bingo.stopState();
+                return;
+            }
+            this.startRound();
+        }
+
+        public void stop() {
+            this.hudTask.cancel();
         }
     }
 
     private static JavaPlugin plugin;
-    public static final State STATE = new State();
+    public static final BingoCard BINGO_CARD = new BingoCard();
+    private static State STATE = null;
+
+    public static Optional<State> getState() {
+        if (STATE == null) {
+            return Optional.empty();
+        }
+        return Optional.of(STATE);
+    }
+
+    public static void startWith(BlissfulTeams teamOne, BlissfulTeams teamTwo) {
+        STATE = new State(teamOne, teamTwo);
+    }
+
+    public static void stopState() {
+        if (STATE == null) return;
+        STATE.stop();
+        STATE = null;
+    }
 
     public static JavaPlugin getPlugin() {
         return plugin;
@@ -98,8 +156,9 @@ public final class Bingo extends JavaPlugin {
     public void onEnable() {
         // Plugin startup logic
         plugin = this;
-        BlissfulCore.registerItem(new BingoCard());
+        BlissfulCore.registerItem(BINGO_CARD);
         Objects.requireNonNull(getCommand("red-button")).setExecutor(new RedButtonCommand());
+        getCommand("bingo").setExecutor(new BingoStateCommand());
     }
 
     @Override

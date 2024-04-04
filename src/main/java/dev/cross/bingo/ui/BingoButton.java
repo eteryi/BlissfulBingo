@@ -16,6 +16,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class BingoButton extends AbstractClickableButton {
     private final BingoBoard board;
@@ -32,6 +33,9 @@ public class BingoButton extends AbstractClickableButton {
         if (this.isSelected) return;
 
         this.isSelected = true;
+
+        Optional<Bingo.State> optState = Bingo.getState();
+
         boolean valid = board.isValid();
         boolean bingo = board.isBingo();
 
@@ -58,10 +62,14 @@ public class BingoButton extends AbstractClickableButton {
         Logic
          */
         Player p = (Player) event.getWhoClicked();
-        if (Bingo.STATE.hasWon(p)) {
-            p.sendMessage(ChatColor.of(BColors.RED.asHexString()) + " ⏺ You have already finished this round!");
+
+        if (optState.isEmpty()) {
+            p.sendMessage(ChatColor.of(BColors.RED.asHexString()) + " ⏺ There isn't an active game found!");
             return;
         }
+
+        Bingo.State state = optState.get();
+
 
         if (!valid) {
             p.sendMessage(ChatColor.of(BColors.RED.asHexString()) + " ⏺ You have selected unrolled numbers in your Bingo card!");
@@ -73,6 +81,6 @@ public class BingoButton extends AbstractClickableButton {
             return;
         }
 
-        Bingo.STATE.declareWinner(p);
+        state.declareWinner(p);
     }
 }

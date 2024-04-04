@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 public class BingoCard extends AbstractBlissfulItem {
     private static final ItemStack cardStack;
+    public static final String BINGO_CARD_ID = "bingo-card";
     private static final @NotNull NamespacedKey BINGO_KEY = Objects.requireNonNull(NamespacedKey.fromString("bingo_card", Bingo.getPlugin()));
 
     static {
@@ -43,7 +44,7 @@ public class BingoCard extends AbstractBlissfulItem {
     }
 
     public BingoCard() {
-        super("bingo-card", cardStack);
+        super(BINGO_CARD_ID, cardStack);
     }
 
     public static final int AMOUNT = 24;
