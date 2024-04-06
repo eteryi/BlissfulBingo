@@ -4,6 +4,7 @@ import dev.cross.bingo.Bingo;
 import dev.cross.bingo.BingoBoard;
 import dev.cross.bingo.BingoElements;
 import dev.cross.blissfulcore.ui.BColors;
+import dev.cross.blissfulcore.ui.BSounds;
 import dev.cross.blissfulcore.ui.inventory.button.AbstractClickableButton;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -34,6 +35,9 @@ public class BingoButton extends AbstractClickableButton {
 
         this.isSelected = true;
 
+        if (!(event.getWhoClicked() instanceof Player p)) {
+            return;
+        }
         Optional<Bingo.State> optState = Bingo.getState();
 
         boolean valid = board.isValid();
@@ -47,6 +51,7 @@ public class BingoButton extends AbstractClickableButton {
         stack.setItemMeta(meta);
         int textureSlot = this.getTextureSlot();
         Objects.requireNonNull(event.getClickedInventory()).setItem(textureSlot, stack);
+        p.playSound(p, BSounds.BUTTON_CLICK, 0.7f, 0.7f);
 
         new BukkitRunnable() {
             @Override
@@ -61,7 +66,6 @@ public class BingoButton extends AbstractClickableButton {
         /*
         Logic
          */
-        Player p = (Player) event.getWhoClicked();
 
         if (optState.isEmpty()) {
             p.sendMessage(ChatColor.of(BColors.RED.asHexString()) + " ⏺ There isn't an active game found!");

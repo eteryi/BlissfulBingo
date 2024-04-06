@@ -10,7 +10,9 @@ import net.kyori.adventure.platform.bukkit.BukkitComponentSerializer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -114,10 +116,17 @@ public class BingoCard extends AbstractBlissfulItem {
         byte[] arr = meta.getPersistentDataContainer().get(BINGO_KEY, PersistentDataType.BYTE_ARRAY);
         if (arr == null) return;
 
-        List<BingoDigit> digits = read(playerInteractEvent.getItem());
+        Player p = playerInteractEvent.getPlayer();
+        EquipmentSlot hand = playerInteractEvent.getHand();
+        ItemStack itemStack = playerInteractEvent.getItem();
+
+        List<BingoDigit> digits = read(itemStack);
         if (digits == null) return;
 
-        BingoInventory inventory = new BingoInventory(playerInteractEvent.getPlayer(), playerInteractEvent.getItem(), digits);
+        if (hand == EquipmentSlot.OFF_HAND) p.swingOffHand();
+        if (hand == EquipmentSlot.HAND) p.swingMainHand();
+
+        BingoInventory inventory = new BingoInventory(p, itemStack, digits);
         inventory.open();
     }
 }

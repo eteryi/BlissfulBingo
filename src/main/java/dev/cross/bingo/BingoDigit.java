@@ -53,6 +53,9 @@ public class BingoDigit {
     }
     public ItemStack createItem() {
         Pair<Material, Integer> itemData = this.isSelected() ? BingoElements.SELECTED_BINGO : BingoElements.UNSELECTED_BINGO;
+        if (this.isMiddle()) {
+            itemData = this.isSelected ? BingoElements.SEL_MIDDLE_BINGO : BingoElements.MIDDLE_BINGO;
+        }
 
         ItemStack stack = new ItemStack(itemData.first());
         ItemMeta meta = stack.getItemMeta();

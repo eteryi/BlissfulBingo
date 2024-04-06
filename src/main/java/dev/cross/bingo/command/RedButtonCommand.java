@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 public class RedButtonCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
+        if (!commandSender.isOp()) return false;
         if (commandSender instanceof Player p) {
             RedButton button = new RedButton();
             Location location = p.getLocation();
